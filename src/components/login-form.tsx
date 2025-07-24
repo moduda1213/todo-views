@@ -25,7 +25,7 @@ const LoginForm = () => {
     setIsLoading(true);
 
     // 로그인 로직
-      try {
+      try { 
         const response = await apiAxios.post("http://127.0.0.1:8000/auth/login", formData);
         console.log(response);
         
