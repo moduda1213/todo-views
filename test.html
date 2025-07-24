@@ -1,0 +1,417 @@
+<html lang="ko"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List Sample</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .add-todo {
+            padding: 30px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .todo-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 50px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .todo-input:focus {
+            border-color: #667eea;
+        }
+
+        .add-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .filter-tabs {
+            display: flex;
+            padding: 0 30px;
+            background: #f8f9fa;
+        }
+
+        .filter-tab {
+            padding: 15px 25px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #6c757d;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .filter-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .todo-list {
+            padding: 30px;
+            min-height: 400px;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+
+        .todo-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .todo-item.completed {
+            opacity: 0.7;
+            border-left-color: #28a745;
+        }
+
+        .todo-item.high-priority {
+            border-left-color: #dc3545;
+        }
+
+        .todo-item.medium-priority {
+            border-left-color: #ffc107;
+        }
+
+        .todo-item.low-priority {
+            border-left-color: #17a2b8;
+        }
+
+        .todo-checkbox {
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+
+        .todo-content {
+            flex: 1;
+        }
+
+        .todo-text {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .todo-text.completed {
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+
+        .todo-meta {
+            font-size: 0.9rem;
+            color: #6c757d;
+            display: flex;
+            gap: 15px;
+        }
+
+        .priority-badge {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .priority-high {
+            background: #ffe6e6;
+            color: #dc3545;
+        }
+
+        .priority-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .priority-low {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .todo-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .edit-btn {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .delete-btn {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>My Todo List</h1>
+            <p>오늘도 생산적인 하루 되세요!</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number">12</div>
+                <div class="stat-label">전체 할일</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">8</div>
+                <div class="stat-label">완료</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">4</div>
+                <div class="stat-label">진행중</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">67%</div>
+                <div class="stat-label">완료율</div>
+            </div>
+        </div>
+
+        <div class="add-todo">
+            <div class="input-group">
+                <input type="text" class="todo-input" placeholder="새로운 할일을 입력하세요..." value="React 로그인 페이지 완성하기">
+                <button class="add-btn">추가</button>
+            </div>
+        </div>
+
+        <div class="filter-tabs">
+            <button class="filter-tab active">전체</button>
+            <button class="filter-tab">진행중</button>
+            <button class="filter-tab">완료</button>
+            <button class="filter-tab">높은 우선순위</button>
+        </div>
+
+        <div class="todo-list">
+            <div class="todo-item high-priority">
+                <input type="checkbox" class="todo-checkbox">
+                <div class="todo-content">
+                    <div class="todo-text">프로젝트 마감일 확인 및 일정 조정</div>
+                    <div class="todo-meta">
+                        <span class="priority-badge priority-high">높음</span>
+                        <span>⏰ 오늘 오후 5시</span>
+                        <span>📁 업무</span>
+                    </div>
+                </div>
+                <div class="todo-actions">
+                    <button class="action-btn edit-btn">수정</button>
+                    <button class="action-btn delete-btn">삭제</button>
+                </div>
+            </div>
+
+            <div class="todo-item medium-priority">
+                <input type="checkbox" class="todo-checkbox">
+                <div class="todo-content">
+                    <div class="todo-text">Python 백엔드 API 문서 작성</div>
+                    <div class="todo-meta">
+                        <span class="priority-badge priority-medium">보통</span>
+                        <span>⏰ 내일</span>
+                        <span>💻 개발</span>
+                    </div>
+                </div>
+                <div class="todo-actions">
+                    <button class="action-btn edit-btn">수정</button>
+                    <button class="action-btn delete-btn">삭제</button>
+                </div>
+            </div>
+
+            <div class="todo-item low-priority completed">
+                <input type="checkbox" class="todo-checkbox" checked="">
+                <div class="todo-content">
+                    <div class="todo-text completed">회원가입 폼 UI 디자인 완료</div>
+                    <div class="todo-meta">
+                        <span class="priority-badge priority-low">낮음</span>
+                        <span>✅ 완료됨</span>
+                        <span>🎨 디자인</span>
+                    </div>
+                </div>
+                <div class="todo-actions">
+                    <button class="action-btn edit-btn">수정</button>
+                    <button class="action-btn delete-btn">삭제</button>
+                </div>
+            </div>
+
+            <div class="todo-item medium-priority">
+                <input type="checkbox" class="todo-checkbox">
+                <div class="todo-content">
+                    <div class="todo-text">구글 OAuth 연동 테스트</div>
+                    <div class="todo-meta">
+                        <span class="priority-badge priority-medium">보통</span>
+                        <span>⏰ 이번 주</span>
+                        <span>🔐 인증</span>
+                    </div>
+                </div>
+                <div class="todo-actions">
+                    <button class="action-btn edit-btn">수정</button>
+                    <button class="action-btn delete-btn">삭제</button>
+                </div>
+            </div>
+
+            <div class="todo-item low-priority completed">
+                <input type="checkbox" class="todo-checkbox" checked="">
+                <div class="todo-content">
+                    <div class="todo-text completed">데이터베이스 스키마 설계</div>
+                    <div class="todo-meta">
+                        <span class="priority-badge priority-low">낮음</span>
+                        <span>✅ 완료됨</span>
+                        <span>🗄️ 데이터베이스</span>
+                    </div>
+                </div>
+                <div class="todo-actions">
+                    <button class="action-btn edit-btn">수정</button>
+                    <button class="action-btn delete-btn">삭제</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 간단한 인터랙션 추가
+        document.querySelectorAll('.todo-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const todoItem = this.closest('.todo-item');
+                const todoText = todoItem.querySelector('.todo-text');
+                
+                if (this.checked) {
+                    todoItem.classList.add('completed');
+                    todoText.classList.add('completed');
+                } else {
+                    todoItem.classList.remove('completed');
+                    todoText.classList.remove('completed');
+                }
+            });
+        });
+
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        document.querySelector('.add-btn').addEventListener('click', function() {
+            const input = document.querySelector('.todo-input');
+            if (input.value.trim()) {
+                alert('새로운 할일이 추가되었습니다: ' + input.value);
+                input.value = '';
+            }
+        });
+    </script>
+
+</body></html>
