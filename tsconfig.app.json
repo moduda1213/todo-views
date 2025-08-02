@@ -10,7 +10,7 @@
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
+    "verbatimModuleSyntax": true, /*타입(Type)을 위한 `import`와 실제 값(Value)을 위한 `import`를 명확하게 구분하도록 강제하는 규칙입니다.*/
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",

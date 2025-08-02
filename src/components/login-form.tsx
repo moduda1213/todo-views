@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import apiAxios from "../lib/apiAxios"
+import { useNavigate } from 'react-router-dom';
+import apiAxios from "@/lib/apiAxios"
+import { ApiError } from '@/lib/ApiError';
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,7 +15,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Eye, EyeOff, Mail, Lock, Github, Chrome } from 'lucide-react';
 
+
 const LoginForm = () => {
+  /**
+    훅(Hook)은 "준비 단계"에서 컴포넌트와 React를 연결하는 역할을 합니다. 
+    따라서 컴포넌트가 렌더링 될 때 항상 동일한 순서로 호출되어야 하므로,
+    함수의 최상위에 위치해야 합니다.
+   */
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -22,19 +31,31 @@ const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async () => {
+    // const navigate = useNavigate(); (x)
     setIsLoading(true);
 
+    console.log("aldalksmd")
+
     // 로그인 로직
-      try { 
-        const response = await apiAxios.post("http://127.0.0.1:8000/auth/login", formData);
-        console.log(response);
-        
-      } catch (error) {
-        console.log(error);
-        
-      } finally {
-        setIsLoading(false);
+    try { 
+      const response = await apiAxios.post("/auth/login", formData);
+      console.log(document.cookie);
+      if(response.status == 200) {
+        navigate("/");
       }
+      
+    } catch (error) {
+      if(error instanceof ApiError) {
+        alert(error.message);
+        console.error('API Error Occurred : ', error);
+      } else {
+        console.error('An unknown error occurred : ', error);
+        alert("알 수 없는 오류가 발생했습니다.")
+      }
+      
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleLogin = () => {

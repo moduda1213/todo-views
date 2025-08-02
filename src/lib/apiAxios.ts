@@ -1,61 +1,66 @@
-import axios from 'axios';
+import axios, { isAxiosError} from 'axios';
+import type { AxiosError, AxiosRequestConfig } from 'axios';
+import { ApiError } from './ApiError';
 
-// 1. 기본 설정을 포함한 axios 인스턴스 생성
-const apiClient = axios.create({
-    baseURL: '', // API 기본 주소
-    timeout: 10000, // 요청 타임아웃
+const apiAxios = axios.create({
+  baseURL: 'http://localhost:8000', // 변경 전 : 'http://127.0.0.1:8000'
+  timeout: 10000,
+  withCredentials:true // 다른 출처로 쿠키를 보내고 받기 위한 설정
 });
 
-// 2. 응답 인터셉터 (Response Interceptor) 설정
-apiClient.interceptors.response.use(
-    // 2-1. 성공적인 응답은 그대로 통과시킴
-    (response) => {
-        // response.config가 있고, 그 안에 data가 있는지 확인
-        if (response.config && response.config.data) {
-            try {
-                // config.data는 보통 JSON 문자열이므로 파싱
-                const requestData = JSON.parse(response.config.data);
-
-                // 'password' 필드가 있다면 삭제
-                if (requestData.password) {
-                    delete requestData.password;
-                }
-
-                // 수정된 데이터를 다시 JSON 문자열로 만들어 할당
-                response.config.data = JSON.stringify(requestData);
-
-            } catch (e) {
-                // 파싱 실패 등 예외 상황에서는 아무것도 하지 않음
-                console.error("Error parsing request data in interceptor", e);
-            }
-        }
-        // 수정된 error 객체를 원래의 catch 블록으로 전달
-        return Promise.reject(response);
-    },
-
-    // 2-2. 실패한 응답(에러)을 catch 블록으로 보내기 전에 가로챔
-    (error) => {
-        // error.config가 있고, 그 안에 data가 있는지 확인
-        if (error.config && error.config.data) {
-            try {
-                // config.data는 보통 JSON 문자열이므로 파싱
-                const requestData = JSON.parse(error.config.data);
-
-                // 'password' 필드가 있다면 삭제
-                if (requestData.password) {
-                    delete requestData.password;
-                }
-
-                // 수정된 데이터를 다시 JSON 문자열로 만들어 할당
-                error.config.data = JSON.stringify(requestData);
-
-            } catch (e) {
-                // 파싱 실패 등 예외 상황에서는 아무것도 하지 않음
-                console.error("Error parsing request data in interceptor", e);
-            }
-        }
-        // 수정된 error 객체를 원래의 catch 블록으로 전달
-        return Promise.reject(error);
+// 요청 인터셉터: 인증 토큰 추가
+apiAxios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
 );
-export default apiClient;
+
+// 응답 데이터에서 비밀번호를 안전하게 제거하는 헬퍼 함수
+const sanitizeConfigData = (config?: AxiosRequestConfig) => {
+  if (config?.data && typeof config.data === 'string') {
+    try {
+      const data = JSON.parse(config.data);
+      if (data.password) {
+        delete data.password;
+        config.data = JSON.stringify(data);
+      }
+    } catch (e) {
+      // 데이터가 유효한 JSON이 아니면 무시
+    }
+  }
+};
+
+// 응답 인터셉터: 중앙 에러 처리 및 비밀번호 로깅 방지
+apiAxios.interceptors.response.use(
+  (response) => {
+    // 성공 응답에서도 요청 정보를 로그로 남길 경우를 대비해 비밀번호 제거
+    sanitizeConfigData(response.config);
+    return response;
+  },
+  (error: AxiosError) => {
+    // 에러 발생 시에도 요청 정보에서 비밀번호 제거
+    sanitizeConfigData(error.config);
+
+    if (isAxiosError(error)) {
+      // 서버 응답에서 detail 메시지를 우선적으로 사용, 없으면 axios의 기본 에러 메시지 사용
+      // response?.data : 옵셔널 체이닝
+      const message = (error.response?.data as any)?.detail || error.message;
+      const statusCode = error.response?.status;
+      
+      // 모든 정보를 담은 커스텀 ApiError를 reject
+      return Promise.reject(new ApiError(message, statusCode, error));
+    }
+    
+    // Axios 에러가 아닌 경우
+    return Promise.reject(new ApiError('An unexpected error occurred.'));
+  }
+);
+
+export default apiAxios;
