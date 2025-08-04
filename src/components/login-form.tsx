@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Eye, EyeOff, Mail, Lock, Github, Chrome } from 'lucide-react';
+import { useAuthStore } from "@/stores/authStore"
 
 
 const LoginForm = () => {
@@ -23,6 +24,7 @@ const LoginForm = () => {
     함수의 최상위에 위치해야 합니다.
    */
   const navigate = useNavigate();
+  const { setUser } = useAuthStore();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -34,15 +36,16 @@ const LoginForm = () => {
     // const navigate = useNavigate(); (x)
     setIsLoading(true);
 
-    console.log("aldalksmd")
-
     // 로그인 로직
     try { 
-      const response = await apiAxios.post("/auth/login", formData);
-      console.log(document.cookie);
-      if(response.status == 200) {
-        navigate("/");
-      }
+
+      await apiAxios.post("/auth/login", formData);
+      const response = await apiAxios.get("/auth/me");
+      
+      setUser(response.data);
+
+      navigate("/");
+      
       
     } catch (error) {
       if(error instanceof ApiError) {

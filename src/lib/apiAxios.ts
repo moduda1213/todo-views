@@ -2,6 +2,8 @@ import axios, { isAxiosError} from 'axios';
 import type { AxiosError, AxiosRequestConfig } from 'axios';
 import { ApiError } from './ApiError';
 
+//API 요청을 보내기 위한 설정/도구
+
 const apiAxios = axios.create({
   baseURL: 'http://localhost:8000', // 변경 전 : 'http://127.0.0.1:8000'
   timeout: 10000,
@@ -11,10 +13,12 @@ const apiAxios = axios.create({
 // 요청 인터셉터: 인증 토큰 추가
 apiAxios.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+
+    // const token = document.cookie;
+    // if (token) {
+    //   let value = token.replace("access_token=", "")
+    //   config.headers.Authorization = `Bearer ${value}`;
+    // }
     return config;
   },
   (error) => {
